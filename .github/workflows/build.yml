@@ -36,3 +36,35 @@ jobs:
           name: built-jar
           path: target/*.jar
 
+          jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout your repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Java
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # Build JAR
+      - name: Build with Maven
+        run: mvn clean package
+
+      # Upload the JAR as a zip
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-jar
+          path: target/*.jar
+
+      # Optional: unzip the JAR (for demo/testing)
+      - name: Unzip the JAR artifact
+        run: |
+          mkdir myjar
+          unzip target/*.jar -d myjar
+          ls -l myjar
