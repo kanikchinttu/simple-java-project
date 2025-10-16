@@ -62,8 +62,4 @@ jobs:
           name: built-jar
           path: target/*.jar
 
-      # Optional: unzip the JAR (for demo/testing)
-      - name: Unzip the JAR artifact
-        run: mkdir myjar
-             unzip target/*.jar -d myjar
-             ls -l myjar
+     
