@@ -64,7 +64,6 @@ jobs:
 
       # Optional: unzip the JAR (for demo/testing)
       - name: Unzip the JAR artifact
-        run: |
-          mkdir myjar
-          unzip target/*.jar -d myjar
-          ls -l myjar
+        run: mkdir myjar
+             unzip target/*.jar -d myjar
+             ls -l myjar
