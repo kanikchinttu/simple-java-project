@@ -1,0 +1,18 @@
+name: Test GitHub Actions Run
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print Hello
+        run: echo "✅ GitHub Action triggered successfully!"
+
+      - name: Show branch
+        run: echo "Branch: ${{ github.ref }}"
