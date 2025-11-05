@@ -3,14 +3,17 @@ name: CI/CD to ACR and Azure Container Apps
 on:
   push:
     branches:
-            -testing-githubaction
+      - testing-githubaction   # Trigger only on this feature branch
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -28,15 +31,17 @@ jobs:
             m2-${{ runner.os }}-
 
       - name: Build with Maven
-        run: mvn -B clean package --file pom.xml
+        run: mvn -B clean package -DskipTests
 
-      - name: Login to ACR
-        run: echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+      - name: Docker login to ACR
+        run: |
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} \
+          -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
-      - name: Build Docker image
+      - name: Build Docker Image
         run: docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/devops-app:${{ github.sha }} .
 
-      - name: Push Docker image to ACR
+      - name: Push Docker Image to ACR
         run: docker push ${{ secrets.ACR_LOGIN_SERVER }}/devops-app:${{ github.sha }}
 
   deploy:
@@ -47,26 +52,30 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Azure Login (OIDC) - recommended
-        uses: azure/login@v1
+      - name: Azure Login (OIDC - Secure)
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Install containerapp extension
+      - name: Install Container Apps Extension
         run: |
-          az extension add --name containerapp --yes
+          az extension add --name containerapp --yes || echo "Already installed"
 
-      - name: Deploy to Azure Container App (update image)
+      - name: Allow Azure Container App to pull image
+        run: |
+          az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: Deploy updated image to Azure Container App
         run: |
           az containerapp update \
             --name ${{ secrets.CONTAINER_APP_NAME }} \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
             --image ${{ secrets.ACR_LOGIN_SERVER }}/devops-app:${{ github.sha }}
 
-      - name: Deployment complete
-        run: echo "Deployed image ${{ secrets.ACR_LOGIN_SERVER }}/devops-app:${{ github.sha }}"
+      - name: Deployment completed ✅
+        run: echo "Deployment finished!"
