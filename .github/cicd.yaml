@@ -1,71 +1,18 @@
-name: CI/CD to ACR and Azure Container Apps
+name: Test GitHub Actions Run
 
 on:
   push:
     branches:
-      - testing-githubaction   # ✅ Correct indentation & dash
+      - testing-githubaction
+  workflow_dispatch:
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+      - name: Print Hello
+        run: echo "✅ GitHub Action triggered successfully!"
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Cache Maven repository
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: m2-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            m2-${{ runner.os }}-
-
-      - name: Build with Maven
-        run: mvn -B clean package --file pom.xml
-
-      - name: Login to ACR
-        run: echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
-
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/devops-app:${{ github.sha }} .
-
-      - name: Push Docker image to ACR
-        run: docker push ${{ secrets.ACR_LOGIN_SERVER }}/devops-app:${{ github.sha }}
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Azure Login (OIDC)
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Install containerapp extension
-        run: az extension add --name containerapp --yes
-
-      - name: Deploy to Container App
-        run: |
-          az containerapp update \
-            --name ${{ secrets.CONTAINER_APP_NAME }} \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --image ${{ secrets.ACR_LOGIN_SERVER }}/devops-app:${{ github.sha }}
-
-      - name: Deployment complete
-        run: echo "✅ Deployment finished"
+      - name: Show branch
+        run: echo "Branch: ${{ github.ref }}"
