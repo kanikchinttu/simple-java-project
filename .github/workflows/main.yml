@@ -14,5 +14,5 @@ jobs:
       - name: Print Hello
         run: echo "✅ GitHub Action triggered successfully!"
 
-      - name: Show branch
-        run: echo "Branch: ${{ github.ref }}"
+      # - name: Show branch
+      #   run: echo "Branch: ${{ github.ref }}"
