@@ -3,7 +3,7 @@ name: Maven Build Pipeline
 on:
   push:
     branches:
-      - testing-githubactions
+      - main
   workflow_dispatch:
 
 jobs:
